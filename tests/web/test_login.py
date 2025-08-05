@@ -1,4 +1,4 @@
-
+import allure
 import pytest
 from selenium import webdriver
 from app.web.login_page import LoginPage
@@ -9,6 +9,8 @@ def driver():
     yield driver
     driver.quit()
 
+@allure.feature("Login")
+@allure.story("Valid User login")
 def test_valid_login(driver):
     page = LoginPage(driver)
     page.load() 
