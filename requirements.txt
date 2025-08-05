@@ -1,0 +1,6 @@
+pytest
+selenium
+requests
+allure-pytest
+appium-python-client
+python-dotenv
