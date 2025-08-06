@@ -1,13 +1,7 @@
 import allure
-import pytest
-from selenium import webdriver
+from app.web.driver import driver
 from app.web.login_page import LoginPage
 
-@pytest.fixture
-def driver():
-    driver = webdriver.Chrome()
-    yield driver
-    driver.quit()
 
 @allure.feature("Login")
 @allure.story("Valid User login")
