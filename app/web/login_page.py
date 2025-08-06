@@ -1,6 +1,6 @@
 import allure
 from selenium.webdriver.common.by import By
-from utils.config import get_base_url
+from conftest import get_base_url
 
 class LoginPage:
     USERNAME = (By.ID, "user-name")

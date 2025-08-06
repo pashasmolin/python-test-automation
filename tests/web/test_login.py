@@ -1,5 +1,4 @@
 import allure
-from app.web.driver import driver
 from app.web.login_page import LoginPage
 
 
