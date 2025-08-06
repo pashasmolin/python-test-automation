@@ -1,7 +1,7 @@
 import os
 from dotenv import load_dotenv
 from utils.logger import logger
-from app.web.driver import driver  # shared fixture
+from app.web.driver import driver  # shared web driver fixture
 
 # Load env variables once for the whole session
 load_dotenv()

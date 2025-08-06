@@ -1,7 +1,6 @@
 import allure
 from app.web.login_page import LoginPage
 
-
 @allure.feature("Login")
 @allure.story("Valid User login")
 def test_valid_login(driver):
