@@ -5,6 +5,7 @@ pipeline {
         VENV = 'venv'
         ALLURE_RESULTS = 'reports/allure-results'
         ALLURE_REPORT = 'reports/allure-report'
+        ALLURE_DIR = 'allure/allure-2.27.0'
     }
 
     stages {
@@ -19,7 +20,6 @@ pipeline {
                 # Download and unzip Allure CLI
                 curl -sSL -o allure.zip https://github.com/allure-framework/allure2/releases/download/2.27.0/allure-2.27.0.zip
                 unzip -o allure.zip -d allure
-                ls -l allure/allure-2.27.0/bin
                 '''
             }
         }
@@ -37,8 +37,8 @@ pipeline {
             steps {
                 sh '''
                 source ${VENV}/bin/activate && \
-                export PATH="$PWD/allure/allure-2.27.0/bin:$PATH" && \
-                echo "Allure path: $(which allure)" && \
+                export PATH=$PWD/${ALLURE_DIR}/bin:$PATH && \
+                which allure && \
                 allure generate ${ALLURE_RESULTS} --clean -o ${ALLURE_REPORT}
                 '''
             }
