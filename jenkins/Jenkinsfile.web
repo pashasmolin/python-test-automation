@@ -17,8 +17,9 @@ pipeline {
                 pip install -r requirements.txt
 
                 # Download and unzip Allure CLI
-                curl -o allure.zip -L https://github.com/allure-framework/allure2/releases/download/2.27.0/allure-2.27.0.zip
+                curl -sSL -o allure.zip https://github.com/allure-framework/allure2/releases/download/2.27.0/allure-2.27.0.zip
                 unzip -o allure.zip -d allure
+                ls -l allure/allure-2.27.0/bin
                 '''
             }
         }
