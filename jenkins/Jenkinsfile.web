@@ -36,9 +36,9 @@ pipeline {
         stage('Generate Allure Report') {
             steps {
                 sh '''
-                export PATH=$PWD/allure/allure-2.27.0/bin:$PATH
-                source ${VENV}/bin/activate
-                which allure
+                source ${VENV}/bin/activate && \
+                export PATH="$PWD/allure/allure-2.27.0/bin:$PATH" && \
+                echo "Allure path: $(which allure)" && \
                 allure generate ${ALLURE_RESULTS} --clean -o ${ALLURE_REPORT}
                 '''
             }
