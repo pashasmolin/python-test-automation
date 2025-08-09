@@ -5,7 +5,6 @@ import pytest
 from app.web.driver import get_driver
 from allure_commons.types import AttachmentType
 import allure
-from app.web.driver import driver  # shared web driver fixture
 
 
 # Load env variables once for the whole session
