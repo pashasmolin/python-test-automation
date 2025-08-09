@@ -1,46 +1,47 @@
 pipeline {
-  agent any
+    agent any
 
   environment {
-    VENV = 'venv'
-    HEADLESS = 'true'
-    SCREENSHOTS_ON_SUCCESS = 'false'
-    ALLURE_RESULTS = 'reports/allure-results'
-    PYTHONPATH = "."
+        VENV = 'venv'
+        HEADLESS = 'true'
+        SCREENSHOTS_ON_SUCCESS = 'false'  // Explicitly control screenshots
+        ALLURE_RESULTS = 'reports/allure-results'
+        PYTHONPATH = "."  // Ensures imports work from root
   }
 
-  stages {
-    stage('Setup') {
-      steps {
-        sh '''
-          python3 -m venv ${VENV}
-          . ${VENV}/bin/activate  # Use dot notation instead of source
-          pip install --upgrade pip wheel
-          pip install -r requirements.txt
-        '''
-      }
-    }
+    stages {
+        stage('Setup') {
+            steps {
+                sh '''
+                python3 -m venv ${VENV}
+                source ${VENV}/bin/activate
+                pip install --upgrade pip
+                pip install -r requirements.txt
+                '''
+            }
+        }
 
-    stage('Run Web Tests') {
-      steps {
-        sh '''
-          . ${VENV}/bin/activate
-          pytest tests/web \
-            --alluredir=${ALLURE_RESULTS} \
-            -p no:logging \
-            -v
-        '''
-        archiveArtifacts artifacts: '**/logs/*.log', allowEmptyArchive: true
-      }
-    }
+        stage('Run Web Tests') {
+            steps {
+                sh '''
+                source ${VENV}/bin/activate
+                HEADLESS=true SCREENSHOTS_ON_SUCCESS=false pytest tests/web \
+                    --alluredir=${ALLURE_RESULTS} \
+                    -p no:logging \
+                    -v  # Verbose output for debugging
+                '''
+                // Archive logs if needed
+                archiveArtifacts artifacts: '**/logs/*.log', allowEmptyArchive: true
+            }
+        }
 
-    stage('Publish Allure Report') {
-      steps {
-        allure([
-          includeProperties: false,
-          jdk: '',
-          results: [[path: "${ALLURE_RESULTS}"]],
-          reportBuildPolicy: 'ALWAYS'
+        stage('Publish Allure Report') {
+            steps {
+                allure([
+                    includeProperties: false,
+                    jdk: '',
+                    results: [[path: "${ALLURE_RESULTS}"]],
+                    reportBuildPolicy: 'ALWAYS'
         ])
       }
     }
@@ -48,9 +49,11 @@ pipeline {
 
   post {
     always {
+      // Clean up virtualenv
       sh 'rm -rf ${VENV} || true'
     }
     failure {
+      // Notify Slack/Email on failure 
       echo 'Tests failed! Investigate the Allure report.'
     }
   }

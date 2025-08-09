@@ -17,7 +17,9 @@ CAPTURE_ON_SUCCESS = os.getenv("SCREENSHOTS_ON_SUCCESS", "false").lower() == "tr
 
 @pytest.fixture
 def driver():
-    drv = get_driver()
+    # Get headless setting from environment (False by default on Mac)
+    headless = os.getenv("HEADLESS", "false").lower() == "true"
+    drv = get_driver(headless=headless)
     yield drv
     drv.quit()
 
