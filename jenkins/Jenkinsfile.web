@@ -1,11 +1,13 @@
 pipeline {
     agent any
 
-    environment {
+  environment {
         VENV = 'venv'
+        HEADLESS = 'true'
+        SCREENSHOTS_ON_SUCCESS = 'false'  // Explicitly control screenshots
         ALLURE_RESULTS = 'reports/allure-results'
-        ALLURE_REPORT = 'reports/allure-report'
-    }
+        PYTHONPATH = "."  // Ensures imports work from root
+  }
 
     stages {
         stage('Setup') {
@@ -23,8 +25,13 @@ pipeline {
             steps {
                 sh '''
                 source ${VENV}/bin/activate
-                pytest tests/web --alluredir=${ALLURE_RESULTS}
+                pytest tests/web \
+                    --alluredir=${ALLURE_RESULTS} \
+                    -p no:logging \
+                    -v  # Verbose output for debugging
                 '''
+                // Archive logs if needed
+                archiveArtifacts artifacts: '**/logs/*.log', allowEmptyArchive: true
             }
         }
 
@@ -33,9 +40,21 @@ pipeline {
                 allure([
                     includeProperties: false,
                     jdk: '',
-                    results: [[path: "${ALLURE_RESULTS}"]]
-                ])
-            }
-        }
+                    results: [[path: "${ALLURE_RESULTS}"]],
+                    reportBuildPolicy: 'ALWAYS'
+        ])
+      }
     }
+  }
+
+  post {
+    always {
+      // Clean up virtualenv
+      sh 'rm -rf ${VENV} || true'
+    }
+    failure {
+      // Notify Slack/Email on failure 
+      echo 'Tests failed! Investigate the Allure report.'
+    }
+  }
 }
