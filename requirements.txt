@@ -4,3 +4,5 @@ requests
 allure-pytest
 appium-python-client
 python-dotenv
+playwright
+pytest-playwright
