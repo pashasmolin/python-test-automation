@@ -1,0 +1,104 @@
+pipeline {
+  agent any
+
+  environment {
+    VENV = 'venv'
+    ALLURE_RESULTS = 'reports/allure-results'
+    // Environment-controlled switches
+    HEADLESS = 'true'
+    SCREENSHOTS_ON_SUCCESS = 'false'
+    // Platform-specific settings
+    DISPLAY = ':99'
+    CHROME_TEMP_DIR = '/tmp/chrome-profile-azure'
+    // Azure-specific settings
+    BASE_URL = 'https://www.saucedemo.com'
+  }
+
+  stages {
+    stage('Setup Environment') {
+      steps {
+        sh '''#!/bin/bash
+          # System dependencies (with sudo if needed)
+          sudo apt-get update -y
+          sudo apt-get install -y \
+            python3-venv \
+            python3-pip \
+            xvfb \
+            libxss1 \
+            libappindicator1 \
+            libindicator7
+
+          # Cleanup any existing processes
+          pkill -f "Xvfb|chrome|chromedriver" || true
+          rm -rf ${CHROME_TEMP_DIR} || true
+        '''
+      }
+    }
+
+    stage('Checkout and Prepare') {
+      steps {
+        checkout scm
+        sh '''#!/bin/bash
+          # Create virtual environment
+          python3 -m venv ${VENV}
+          source ${VENV}/bin/activate
+          pip install --upgrade pip
+          pip install -r requirements.txt
+
+          # Install Playwright if not already installed
+          pip install playwright
+          playwright install --with-deps chromium
+        '''
+      }
+    }
+
+    stage('Run Tests') {
+      steps {
+        sh '''#!/bin/bash
+          source ${VENV}/bin/activate
+
+          # Start virtual display
+          Xvfb ${DISPLAY} -screen 0 1920x1080x24 &
+          sleep 5  # Ensure Xvfb is ready
+
+          # Export display for GUI applications
+          export DISPLAY=${DISPLAY}
+
+          # Run tests with environment variables
+          HEADLESS=${HEADLESS} \
+          SCREENSHOTS_ON_SUCCESS=${SCREENSHOTS_ON_SUCCESS} \
+          BASE_URL=${BASE_URL} \
+          pytest tests/ \
+            --alluredir=${ALLURE_RESULTS} \
+            -p no:logging \
+            -v
+        '''
+      }
+    }
+
+    stage('Publish Report') {
+      steps {
+        allure([
+          includeProperties: false,
+          jdk: '',
+          results: [[path: "${ALLURE_RESULTS}"]],
+          reportBuildPolicy: 'ALWAYS'
+        ])
+      }
+    }
+  }
+
+  post {
+    always {
+      sh '''#!/bin/bash
+        # Final cleanup
+        pkill -f "Xvfb|chrome|chromedriver" || true
+        rm -rf ${VENV} ${CHROME_TEMP_DIR}
+      '''
+      cleanWs()
+    }
+    failure {
+      echo 'Tests failed! Check Allure report for details.'
+    }
+  }
+}
